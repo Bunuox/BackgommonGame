@@ -1,0 +1,781 @@
+from prettytable import PrettyTable
+import codecs
+import random
+import sys
+import time
+
+tableDict = dict()
+class Player:
+    playerName = ""
+    brokenFlakeCount = 0
+    hasCollected = False
+    rotateDirection = ""
+    collactedFlakeCount = 15
+
+    def __init__(self,name):
+        if(name == "X"):
+            self.playerName = "X"
+            self.rotateDirection = "clockwise"
+
+        if(name == "Y"):
+            self.playerName = "Y"
+            self.rotateDirection = "counter-clockwise"
+
+
+#Tavladaki alanların işlem yapılabilmesi için koordinatları.
+tableIndexDict = {"A1":[0,0],"B1":[0,1],"C1":[0,2],"D1":[0,3],"E1":[0,4],"F1":[0,5],"G1":[0,6],"H1":[0,7],"I1":[0,8],"J1":[0,9],"K1":[0,10],"L1":[0,11],
+                  "E3":[2,4],"H3":[2,7],
+                  "A5":[4,0],"B5":[4,1],"C5":[4,2],"D5":[4,3],"E5":[4,4],"F5":[4,5],"G5":[4,6],"H5":[4,7],"I5":[4,8],"J5":[4,9],"K5":[4,10],"L5":[4,11]}
+
+table_index_key_list = list(tableIndexDict.keys())
+table_index_val_list = list(tableIndexDict.values())
+
+#Oyun başlangıcında taşların dizilmesi.
+def setTable():
+    tableDict = {"A1":"5Y","B1":"","C1":"","D1":"","E1":"3X","F1":"","G1":"5X","H1":"","I1":"","J1":"","K1":"","L1":"2Y",
+             "E3":"0X","H3":"0Y",
+             "A5":"5X","B5":"","C5":"","D5":"","E5":"3Y","F5":"","G5":"5Y","H5":"","I5":"","J5":"","K5":"","L5":"2X"}
+    return tableDict
+
+#Tavla tahtasının dosyaya kaydedilmesi
+def writeTable(t,dice1,dice2):
+    table = PrettyTable(["n", "A", "B", "C", "D", "E", "F", "------", "G", "H", "I", "J", "K", "L"])
+    table.align['n'] = 'c'
+    table.align['A'] = 'c'
+    table.align['B'] = 'c'
+    table.align['C'] = 'c'
+    table.align['D'] = 'c'
+    table.align['E'] = 'c'
+    table.align['F'] = 'c'
+    table.align['G'] = 'c'
+    table.align['H'] = 'c'
+    table.align['I'] = 'c'
+    table.align['J'] = 'c'
+    table.align['K'] = 'c'
+    table.align['L'] = 'c'
+
+    table.add_rows([
+                    ["1", t['A1'], t['B1'], t['C1'], t['D1'], t['E1'], t['F1'], "------", t['G1'], t['H1'], t['I1'], t['J1'], t['K1'], t['L1']],
+                    ["2", " ", "", "", "", "", "", "------", "", "", "", "", "", ""],
+                    ["3", " ", "", "", "", t['E3'], dice1, "------", dice2, t['H3'],"", "", "", ""],
+                    ["4", " ", "", "", "", "", "", "------", "", "", "", "", "", ""],
+                    ["5", t['A5'], t['B5'], t['C5'], t['D5'], t['E5'], t['F5'], "------", t['G5'],t['H5'], t['I5'], t['J5'], t['K5'], t['L5']]
+                  ])
+    print(table)
+
+
+def saveTable(dice1,dice2,t):
+    table = PrettyTable(["n", "A", "B", "C", "D", "E", "F", "------", "G", "H", "I", "J", "K", "L"])
+    table.align['n'] = 'c'
+    table.align['A'] = 'c'
+    table.align['B'] = 'c'
+    table.align['C'] = 'c'
+    table.align['D'] = 'c'
+    table.align['E'] = 'c'
+    table.align['F'] = 'c'
+    table.align['G'] = 'c'
+    table.align['H'] = 'c'
+    table.align['I'] = 'c'
+    table.align['J'] = 'c'
+    table.align['K'] = 'c'
+    table.align['L'] = 'c'
+
+    table.add_rows([
+                    ["1", t['A1'], t['B1'], t['C1'], t['D1'], t['E1'], t['F1'], "------", t['G1'], t['H1'], t['I1'], t['J1'], t['K1'], t['L1']],
+                    ["2", " ", "", "", "", "", "", "------", "", "", "", "", "", ""],
+                    ["3", " ", "", "", "", t['E3'], dice1, "------", dice2, t['H3'],"", "", "", ""],
+                    ["4", " ", "", "", "", "", "", "------", "", "", "", "", "", ""],
+                    ["5", t['A5'], t['B5'], t['C5'], t['D5'], t['E5'], t['F5'], "------", t['G5'],t['H5'], t['I5'], t['J5'], t['K5'], t['L5']]
+                  ])
+    file = open("table.dat","w")
+    file.write(table.__str__())
+    file.close()
+
+
+def saveDiceWithPlayer(player,dice1,dice2):
+    f = open("dice.dat","a")
+    f.write(player.playerName + " " + str(dice1) + " " + str(dice2) +"\n")
+    f.close()
+
+
+def saveDice(dice1,dice2):
+    f = open("dice.dat","w")
+    f.write(str(dice1) + "\n")
+    f.write(str(dice2) + "\n")
+    f.close()
+
+
+
+#Rastgele iki adet zarın atılması.
+def rollTheDice():
+    dice1 = random.randint(1,6)
+    dice2 = random.randint(1,6)
+    return dice1,dice2
+
+
+def saveGame(playerX,playerY,table):
+    print('Oyun kaydediliyor ...')
+    time.sleep(2)
+
+    file = open("playerX.dat","w")
+    file.write(str(playerX.brokenFlakeCount) + "\n" + str(playerX.hasCollected) + "\n" + str(playerX.rotateDirection) +"\n" + str(playerX.collactedFlakeCount))
+    file.close()
+
+    file = open("playerY.dat","w")
+    file.write(str(playerY.brokenFlakeCount) + "\n" + str(playerY.hasCollected) + "\n" + str(playerY.rotateDirection) +"\n" + str(playerY.collactedFlakeCount))
+    file.close()
+
+    file = open("tableData.dat","w")
+    file.write('\n'.join(table.values()))
+    file.close()
+
+
+    print('Oyun başarıyla kaydedildi.')
+    print('Oyundan çıkış yapılıyor...')
+    time.sleep(1)
+    sys.exit()
+
+
+#Kırık taşı çıkar
+def moveBrokenFlake(player,player2,dice,table):
+    if(player.playerName == 'X'):
+        destinationFlakePosition = [4,(12-dice)]
+        destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]
+        destinationFlakeValue = table[destinationFlakePositionName]
+
+        if(destinationFlakeValue == ""):
+            table[destinationFlakePositionName] = "1X"
+            player.brokenFlakeCount = player.brokenFlakeCount -1
+            table["E3"] = str(player.brokenFlakeCount) + "X"
+            print("Kırık taşlardan biri",destinationFlakePositionName,"alanına çıkarıldı")
+        else:
+            destinationFlakeCount = destinationFlakeValue[0:1]
+            destinationFlakeType = destinationFlakeValue[1:2]
+
+            if(destinationFlakeType == 'X'):
+                table[destinationFlakePositionName] = str(int(destinationFlakeCount)+1) + "X"
+                player.brokenFlakeCount = player.brokenFlakeCount - 1
+                table["E3"] = str(player.brokenFlakeCount) + "X"
+                print("Kırık taşlardan biri",destinationFlakePositionName,"alanına çıkarıldı")
+
+            if(destinationFlakeType == "Y" and int(destinationFlakeCount) == 1):
+                player.brokenFlakeCount = player.brokenFlakeCount - 1
+                table["E3"] = str(player.brokenFlakeCount) + "X"
+                player2.brokenFlakeCount = player2.brokenFlakeCount + 1
+                table["H3"] = str(int(table["H3"][0:1]) + 1) + "Y"
+                table[destinationFlakePositionName] = "1X"
+                print("Kırık taşlardan biri", destinationFlakePositionName, "alanına çıkarıldı. Rakibin bir taşı kırıldı",)
+
+            if(destinationFlakeType == "Y" and int(destinationFlakeCount) > 1):
+                return -1
+
+    if (player.playerName == 'Y'):
+        destinationFlakePosition = [0, (12 - dice)]
+        destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]
+        destinationFlakeValue = table[destinationFlakePositionName]
+
+        if (destinationFlakeValue == ""):
+            table[destinationFlakePositionName] = "1Y"
+            player.brokenFlakeCount = player.brokenFlakeCount - 1
+            table["H3"] = str(player.brokenFlakeCount) + "Y"
+            print("Kırık taşlardan biri", destinationFlakePositionName, "alanına çıkarıldı")
+        else:
+            destinationFlakeCount = destinationFlakeValue[0:1]
+            destinationFlakeType = destinationFlakeValue[1:2]
+
+            if (destinationFlakeType == 'Y'):
+                table[destinationFlakePositionName] = str(int(destinationFlakeCount) + 1) + "Y"
+                player.brokenFlakeCount = player.brokenFlakeCount - 1
+                table["H3"] = str(player.brokenFlakeCount) + "Y"
+                print("Kırık taşlardan biri", destinationFlakePositionName, "alanına çıkarıldı")
+
+            if (destinationFlakeType == "X" and int(destinationFlakeCount) == 1):
+                player.brokenFlakeCount = player.brokenFlakeCount - 1
+                table["H3"] = str(player.brokenFlakeCount) + "Y"
+
+                player2.brokenFlakeCount = player2.brokenFlakeCount + 1
+                table["E3"] = str(int(table["E3"][0:1]) + 1) + "X"
+                table[destinationFlakePositionName] = "1Y"
+                print("Kırık taşlardan biri", destinationFlakePositionName,
+                      "alanına çıkarıldı. Rakibin bir taşı kırıldı", )
+
+            if (destinationFlakeType == "X" and int(destinationFlakeCount) > 1):
+                return -1
+
+
+def checkCollected(player,table):
+    if(player.playerName == 'X'):
+        count = 0
+        if(table["G1"] != ""):
+            if(table["G1"][1] == 'X'):
+                count += int(table["G1"][0])
+        if(table["H1"] != ""):
+            if(table["H1"][1] == 'X'):
+                count += int(table["H1"][0])
+        if(table["I1"] != ""):
+            if(table["I1"][1] == 'X'):
+                count += int(table["I1"][0])
+        if(table["J1"] != ""):
+            if(table["J1"][1] == 'X'):
+                count += int(table["J1"][0])
+        if(table["K1"] != ""):
+            if(table["K1"][1] == 'X'):
+                count += int(table["K1"][0])
+        if(table["L1"] != ""):
+            if(table["L1"][1] == 'X'):
+                count += int(table["L1"][0])
+        if(count == 15):
+            player.hasCollected = True
+
+
+    if (player.playerName == 'Y'):
+        count = 0
+        if (table["G5"] != ""):
+            if (table["G5"][1] == 'Y'):
+                count += int(table["G5"][0])
+        if (table["H5"] != ""):
+            if (table["H5"][1] == 'Y'):
+                count += int(table["H5"][0])
+        if (table["I5"] != ""):
+            if (table["I5"][1] == 'Y'):
+                count += int(table["I5"][0])
+        if (table["J5"] != ""):
+            if (table["J5"][1] == 'Y'):
+                 count += int(table["J5"][0])
+        if (table["K5"] != ""):
+            if (table["K5"][1] == 'Y'):
+                count += int(table["K5"][0])
+        if (table["L5"] != ""):
+            if (table["L5"][1] == 'Y'):
+                count += int(table["L5"][0])
+        if (count == 15):
+            player.hasCollected = True
+
+
+#Taşı hareket ettirmek için fonksiyon.
+def moveFlake(player1,player2,dice,flake,table):
+    if(flake not in table.keys() and flake != 'P'):
+        print("Yanlış giriş yaptınız! Oynayabileceğiniz yerler: ", "(", ','.join(table.keys()), ")")
+        return -1
+    if(flake == 'P'):
+        return ""
+    checkCollected(player1, table)
+    if(player1.playerName == "X"):
+        baseFlakePositionName = flake                                              #Oynatılacak taşın tahtadaki yerinin ismi.
+        baseFlakeValue = table[baseFlakePositionName]                              #Oynatılacak taşın tahtada bulunduğu yerdeki taşların cinsi ve sayısı.
+
+        if(baseFlakeValue == ""):
+            print('Oynatmayı istediğiniz yerde taş mevcut değil',(flake))
+            return -1
+
+        else:
+            baseFlakeCount = int(baseFlakeValue[0:1])                                  #Oynatılacak taşın tahtada bulunduğu yerdeki taşların sayısı.
+            baseFlakeType = baseFlakeValue[1:2]                                        #Oynatılacak taşın tahta bulunduğu yerdeki taşların cinsi.
+            baseFlakePosition = tableIndexDict[baseFlakePositionName]                  #Oynatılacak taşın tahtadaki yerinin koordinatları.
+
+            if(baseFlakeType == 'X' and baseFlakeCount != 0):
+
+                destinationFlakePositionName = ""
+                destinationFlakeValue = ""
+
+                #Taşın gideceği konumu belirle.
+                if(baseFlakePosition[0] == 4 and baseFlakePosition[1]-dice < 0):        #Yukarıya geçiyorsa;
+                    destinationFlakePosition = [0,-1*(baseFlakePosition[1]-dice)-1]
+                    destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]    #Gidilecek yerin tahtadaki yerinin ismi.
+                    destinationFlakeValue = table[destinationFlakePositionName]                                                  #Gidilecek yerdeki taşların cinsi ve sayısı.
+
+                if(baseFlakePosition[0] == 4 and baseFlakePosition[1]-dice >= 0):       #Aşağıdaysa ve yukarıya geçmiyorsa;
+                    destinationFlakePosition = [4, baseFlakePosition[1] - dice]
+                    destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]
+                    destinationFlakeValue = table[destinationFlakePositionName]
+
+                if(baseFlakePosition[0] == 0 and baseFlakePosition[1]+dice < 12):       #Yukarıdaysa ve taşmıyorsa
+                    destinationFlakePosition = [0, baseFlakePosition[1]+dice]
+                    destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]
+                    destinationFlakeValue = table[destinationFlakePositionName]
+
+                if(baseFlakePosition[0] == 0 and baseFlakePosition[1]+dice >= 12 and player1.hasCollected == True):             #Toplamaya başladıysa
+                    destinationFlakeValue = "999"
+
+                if(baseFlakePosition[0] == 0 and baseFlakePosition[1]+dice >= 12 and player1.hasCollected == False):
+                    print("Taşınızı toplayamazsınız (Tüm taşlar alana toplanmadı)")
+                    return -1
+
+                if(destinationFlakeValue == "999"):
+                    table[baseFlakePositionName] = str(baseFlakeCount - 1) + "X"
+                    if (baseFlakeCount - 1 == 0):
+                        table[baseFlakePositionName] = ""
+                    player1.collactedFlakeCount = player1.collactedFlakeCount-1
+                    print(player1.collactedFlakeCount)
+                    checkCollected(player1, table)
+
+                if(destinationFlakeValue == ""):                                      # Gidilecek yerde taş yoksa, yerleştir.
+                    table[baseFlakePositionName] = str(baseFlakeCount - 1) + "X"      # Mevcut konumdaki taş miktarını 1 azalt. Eğer azaltmadan sonra 0 kalıyorsa orayı boşalt.
+                    if (baseFlakeCount - 1 == 0):
+                        table[baseFlakePositionName] = ""
+                    table[destinationFlakePositionName] = "1" + baseFlakeType
+                    checkCollected(player1, table)
+
+                else:
+                    destinationFlakeCount = int(destinationFlakeValue[0:1])           #Gidilecek yerdeki taşların sayısı.
+                    destinationFlakeType = destinationFlakeValue[1:2]                 #Gidilecek yerdeki taşların cinsi.
+
+                    if(destinationFlakeType == 'Y' and destinationFlakeCount > 1):    #Gidilecek yerde birden fazla Y taşı varsa;
+                        print(flake," Taşınızı oraya oynatamazsınız (Rakibin taşı mevcut)")
+                        return -1
+
+                    if(destinationFlakeType == 'X'):                                  # Gidilecek yerde X taşı varsa;
+                        table[baseFlakePositionName] = str(baseFlakeCount - 1) + "X"  # Mevcut konumdaki taş miktarını 1 azalt. Eğer azaltmadan sonra 0 kalıyorsa orayı boşalt.
+                        if (baseFlakeCount - 1 == 0):
+                            table[baseFlakePositionName] = ""
+                        table[destinationFlakePositionName] = str(destinationFlakeCount+1) + destinationFlakeType
+                    checkCollected(player1, table)
+
+                    if(destinationFlakeType == 'Y' and destinationFlakeCount == 1):   # Gidilecek yerde bir tane Y taşı varsa; TAŞI KIR
+                        table[baseFlakePositionName] = str(baseFlakeCount - 1) + "X"  # Mevcut konumdaki taş miktarını 1 azalt. Eğer azaltmadan sonra 0 kalıyorsa orayı boşalt.
+                        if (baseFlakeCount - 1 == 0):
+                            table[baseFlakePositionName] = ""
+                        player2.brokenFlakeCount = player2.brokenFlakeCount + 1
+                        table["H3"] = str(int(table["H3"][0:1]) + 1) + "Y"
+                        table[destinationFlakePositionName] = "1X"
+                        return "break"
+
+            if (baseFlakeType == 'Y'):
+                print(flake,"'de",'Y oyuncusunun taşı bulunuyor!')
+                return -1
+
+    if(player1.playerName == "Y"):
+        baseFlakePositionName = flake                  # Oynatılacak taşın tahtadaki yerinin ismi.
+        baseFlakeValue = table[baseFlakePositionName]  # Oynatılacak taşın tahtada bulunduğu yerdeki taşların cinsi ve sayısı.
+
+        if (baseFlakeValue == ""):
+            print('Oynatmayı istediğiniz yerde taş mevcut değil', (flake))
+            return -1
+
+        else:
+            baseFlakeCount = int(baseFlakeValue[0:1])  # Oynatılacak taşın tahtada bulunduğu yerdeki taşların sayısı.
+            baseFlakeType = baseFlakeValue[1:2]  # Oynatılacak taşın tahta bulunduğu yerdeki taşların cinsi.
+            baseFlakePosition = tableIndexDict[
+                baseFlakePositionName]  # Oynatılacak taşın tahtadaki yerinin koordinatları.
+
+            if (baseFlakeType == 'Y' and baseFlakeCount != 0):
+
+                destinationFlakePositionName = ""
+                destinationFlakeValue = ""
+
+                # Taşın gideceği konumu belirle.
+                if (baseFlakePosition[0] == 0 and baseFlakePosition[1] - dice < 0):                                            # Aşağı geçiyorsa;
+                    destinationFlakePosition = [4, -1 * (baseFlakePosition[1] - dice) - 1]
+                    destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]  # Gidilecek yerin tahtadaki yerinin ismi.
+                    destinationFlakeValue = table[destinationFlakePositionName]                                                # Gidilecek yerdeki taşların cinsi ve sayısı.
+
+                if (baseFlakePosition[0] == 0 and baseFlakePosition[1] - dice >= 0):                                            # Yukarıdaysa ve aşağı geçmiyorsa;
+                    destinationFlakePosition = [0, baseFlakePosition[1] - dice]
+                    destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]
+                    destinationFlakeValue = table[destinationFlakePositionName]
+
+                if (baseFlakePosition[0] == 4 and baseFlakePosition[1] + dice < 12):                                            # Aşağıdaysa ve taşmıyorsa
+                    destinationFlakePosition = [4, baseFlakePosition[1] + dice]
+                    destinationFlakePositionName = table_index_key_list[table_index_val_list.index(destinationFlakePosition)]
+                    destinationFlakeValue = table[destinationFlakePositionName]
+
+                if (baseFlakePosition[0] == 4 and baseFlakePosition[1] + dice >= 12 and player1.hasCollected == True):          # Toplamaya başladıysa
+                    destinationFlakeValue = "999"
+
+                if (baseFlakePosition[0] == 4 and baseFlakePosition[1] + dice >= 12 and player1.hasCollected == False):         # Taşları toplamadan, taşdıysa
+                    print("Taşınızı toplayamazsınız (Tüm taşlar alana toplanmadı)")
+                    return -1
+
+                if (destinationFlakeValue == "999"):
+                    table[baseFlakePositionName] = str(baseFlakeCount - 1) + "Y"           #Bulunduğu yerden bir tane Y eksilt.
+                    if (baseFlakeCount - 1 == 0):
+                        table[baseFlakePositionName] = ""
+                    player1.collactedFlakeCount = player1.collactedFlakeCount - 1          #Bir tane taş topladığını belirt
+                    print(player1.collactedFlakeCount)
+                    checkCollected(player1, table)
+
+                if (destinationFlakeValue == ""):                                 # Gidilecek yerde taş yoksa, yerleştir.
+                    table[baseFlakePositionName] = str(baseFlakeCount - 1) + "Y"  # Mevcut konumdaki taş miktarını 1 azalt. Eğer azaltmadan sonra 0 kalıyorsa orayı boşalt.
+                    if (baseFlakeCount - 1 == 0):
+                        table[baseFlakePositionName] = ""
+                    table[destinationFlakePositionName] = "1" + baseFlakeType
+                    checkCollected(player1, table)
+
+                else:
+                    destinationFlakeCount = int(destinationFlakeValue[0:1])           # Gidilecek yerdeki taşların sayısı.
+                    destinationFlakeType = destinationFlakeValue[1:2]                 # Gidilecek yerdeki taşların cinsi.
+
+                    if (destinationFlakeType == 'X' and destinationFlakeCount > 1):   # Gidilecek yerde birden fazla X taşı varsa;
+                        print(flake, " Taşınızı oraya oynatamazsınız (Rakibin taşı mevcut)")
+                        return -1
+
+                    if (destinationFlakeType == 'Y'):                                 # Gidilecek yerde Y taşı varsa;
+                        table[baseFlakePositionName] = str(baseFlakeCount - 1) + "Y"  # Mevcut konumdaki taş miktarını 1 azalt. Eğer azaltmadan sonra 0 kalıyorsa orayı boşalt.
+                        if (baseFlakeCount - 1 == 0):
+                            table[baseFlakePositionName] = ""
+                        table[destinationFlakePositionName] = str(destinationFlakeCount + 1) + destinationFlakeType
+                    checkCollected(player1, table)
+
+                    if (destinationFlakeType == 'X' and destinationFlakeCount == 1):  # Gidilecek yerde bir tane X taşı varsa; TAŞI KIR
+                        table[baseFlakePositionName] = str(baseFlakeCount - 1) + "Y"  # Mevcut konumdaki taş miktarını 1 azalt. Eğer azaltmadan sonra 0 kalıyorsa orayı boşalt.
+                        if (baseFlakeCount - 1 == 0):
+                            table[baseFlakePositionName] = ""
+                        player2.brokenFlakeCount = player2.brokenFlakeCount + 1
+                        table["E3"] = str(int(table["E3"][0:1]) + 1) + "X"
+                        table[destinationFlakePositionName] = "1Y"
+                        return "break"
+
+            if (baseFlakeType == 'X'):
+                print(flake, "'de", 'X oyuncusunun taşı bulunuyor!')
+                return -1
+
+
+def playerXTurn(playerX, playerY, table):
+    print("X oyuncusunun sırası. Oyundan çıkmak için 'Q' girin, devam etmek için 'enter' tuşuna basabilirsiniz..")
+    quit = input()
+    if(quit == 'Q'):
+        saveGame(playerX, playerY, table)
+    dice1, dice2 = rollTheDice()
+    writeTable(table,dice1,dice2)
+    saveDiceWithPlayer(playerX,dice1,dice2)
+
+    if(playerX.brokenFlakeCount > 0):
+        if(dice1 != dice2):
+            if (moveBrokenFlake(playerX, playerY, dice1, table) == -1):
+                if (moveBrokenFlake(playerX, playerY, dice2, table) == -1):
+                    print("Hiç Kırık taş çıkartılamadı.")
+                    saveTable(dice1, dice2, table)
+                    return ""
+            else:
+                if(playerX.brokenFlakeCount != 0 ):
+                    if(moveBrokenFlake(playerX,playerY,dice2,table) == -1):
+                        saveTable(dice1, dice2, table)
+                        return ""
+                    else:
+                        saveTable(dice1, dice2, table)
+                        return ""
+                else:
+                    print(dice2, "Zarı için hangi taşını oynatmak istiyorsun?")
+                    flake2 = input()
+                    while (moveFlake(playerX, playerY, dice2, flake2, table) == -1):
+                        print(dice2, "Zarı için hangi taşını oynatmak istiyorsun?")
+                        flake2 = input()
+                    saveTable(dice1, dice2, table)
+                    return ""
+        else:
+            if (moveBrokenFlake(playerX, playerY, dice1, table) == -1):
+                print("Hiç kırık taç çıkartılamadı.")
+                saveTable(dice1, dice2, table)
+                return ""
+            else:
+                round = 3 - playerX.brokenFlakeCount
+                if (round <= 0):
+                    for i in range(0, 3):
+                        moveBrokenFlake(playerX, playerY, dice1, table)
+                    saveTable(dice1, dice2, table)
+                    return ""
+                if (round > 0):
+                    for i in range(0, playerY.brokenFlakeCount):
+                        moveBrokenFlake(playerX, playerY, dice1, table)
+                    for j in range(0, round):
+                        print(dice1, "Zarı için hangi taşını oynatmak istiyorsun?")
+                        flake = input()
+                        while (moveFlake(playerX, playerY, dice1, flake, table) == -1):
+                            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun?")
+                            flake = input()
+                    saveTable(dice1, dice2, table)
+                    return ""
+    else:
+        #4 kere oynanması lazım.
+        if(dice1 == dice2):
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake1 = input()
+            while(moveFlake(playerX, playerY, dice1, flake1, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake1 = input()
+
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake2 = input()
+            while(moveFlake(playerX, playerY, dice1, flake2, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake2 = input()
+
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake3 = input()
+            while(moveFlake(playerX, playerY, dice1, flake3, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake3 = input()
+
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake4 = input()
+            while(moveFlake(playerX, playerY, dice1, flake4, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake4 = input()
+        else:
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake1 = input()
+            while(moveFlake(playerX,playerY,dice1,flake1,table) == -1):
+                print(dice1, " Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake1 = input()
+
+            print(dice2, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake2 = input()
+            while(moveFlake(playerX,playerY,dice2,flake2,table) == -1):
+                print(dice2, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake2 = input()
+    saveTable(dice1, dice2, table)
+    return ""
+
+
+def playerYTurn(playerY,playerX,table):
+    print("Y oyuncusunun sırası. Oyundan çıkmak için 'Q' girin, devam etmek için 'enter' tuşuna basabilirsiniz..")
+    quit = input()
+    if (quit == 'Q'):
+        saveGame(playerX, playerY, table)
+    dice1, dice2 = rollTheDice()
+    writeTable(table,dice1,dice2)
+    saveDiceWithPlayer(playerY, dice1, dice2)
+
+    if (playerY.brokenFlakeCount > 0):
+        if(dice1 != dice2):
+            if (moveBrokenFlake(playerY, playerX, dice1, table) == -1):
+                if (moveBrokenFlake(playerY, playerX, dice2, table) == -1):
+                    print("Hiç Kırık taş çıkartılamadı.")
+                    return ""
+            else:
+                if(playerY.brokenFlakeCount > 0 ):
+                    if(moveBrokenFlake(playerY,playerX,dice2,table) == -1):
+                        saveTable(dice1,dice2,table)
+                        return ""
+                    else:
+                        saveTable(dice1, dice2, table)
+                        return ""
+                else:
+                    print(dice2, "Zarı için hangi taşını oynatmak istiyorsun?")
+                    flake2 = input()
+                    while (moveFlake(playerY, playerX, dice2, flake2, table) == -1):
+                        print(dice2, "Zarı için hangi taşını oynatmak istiyorsun?")
+                        flake2 = input()
+                    saveTable(dice1, dice2, table)
+                    return ""
+        else:
+            if(moveBrokenFlake(playerY,playerX,dice1,table) == -1):
+                print("Hiç kırık taç çıkartılamadı.")
+                saveTable(dice1, dice2, table)
+                return ""
+            else:
+                round = 3 - playerY.brokenFlakeCount
+                if (round <= 0):
+                    for i in range(0,3):
+                        moveBrokenFlake(playerY,playerX,dice1,table)
+                    saveTable(dice1, dice2, table)
+                    return ""
+                if(round > 0):
+                    for i in range(0,playerY.brokenFlakeCount):
+                        moveBrokenFlake(playerY,playerX,dice1,table)
+                    for j in range(0,round):
+                        print(dice1, "Zarı için hangi taşını oynatmak istiyorsun?")
+                        flake = input()
+                        while (moveFlake(playerY, playerX, dice1, flake, table) == -1):
+                            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun?")
+                            flake = input()
+                    saveTable(dice1, dice2, table)
+                    return ""
+    else:
+        # 4 kere oynanması lazım.
+        if (dice1 == dice2):
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake1 = input()
+            while (moveFlake(playerY, playerX, dice1, flake1, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake1 = input()
+
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake2 = input()
+            while (moveFlake(playerY, playerX, dice1, flake2, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake2 = input()
+
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake3 = input()
+            while (moveFlake(playerY, playerX, dice1, flake3, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun?")
+                flake3 = input()
+
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake4 = input()
+            while (moveFlake(playerY, playerX, dice1, flake4, table) == -1):
+                print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake4 = input()
+        else:
+            print(dice1, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake1 = input()
+            while (moveFlake(playerY, playerX, dice1, flake1, table) == -1):
+                print(dice1, " Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake1 = input()
+
+            print(dice2, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+            flake2 = input()
+            while (moveFlake(playerY, playerX, dice2, flake2, table) == -1):
+                print(dice2, "Zarı için hangi taşını oynatmak istiyorsun? (Sırayı atlamak için 'P')")
+                flake2 = input()
+    saveTable(dice1, dice2, table)
+    return ""
+
+
+def startNewGame():
+
+    table = setTable()
+    playerX = Player("X")
+    playerY = Player("Y")
+    dice1,dice2 = rollTheDice()
+    while(dice1 == dice2):
+        dice1,dice2 = rollTheDice()
+
+    saveDice(dice1,dice2)
+
+    print(dice1,dice2, "zarları geldi.")
+    if(dice1>dice2):
+        print("Oyuna X oyuncusu başlıyor")
+        playerXTurn(playerX,playerY,table)
+        while (playerX.collactedFlakeCount != 0 or playerY.collactedFlakeCount != 0):
+            playerYTurn(playerY,playerX,table)
+            playerXTurn(playerX,playerY,table)
+            if(playerX.collactedFlakeCount == 0):
+                print("Oyunu X kazandı")
+                return ""
+            if(playerY.collactedFlakeCount == 0):
+                print("Oyunu Y kazandı")
+                return ""
+
+    else:
+        print("Oyuna Y oyuncusu başlıyor")
+        playerYTurn(playerY,playerX,table)
+        while (playerX.collactedFlakeCount != 0 or playerY.collactedFlakeCount != 0):
+            playerXTurn(playerX,playerY,table)
+            playerYTurn(playerY,playerX,table)
+            if(playerX.collactedFlakeCount == 0):
+                print("Oyunu X kazandı")
+                return ""
+            if(playerY.collactedFlakeCount == 0):
+                print("Oyunu Y kazandı")
+                return ""
+
+
+def loadPlayers(name):
+    if(name == 'X'):
+        playerXFile = open("playerX.dat", "r")
+        playerXLines = playerXFile.readlines()
+        playerX = Player('X')
+        playerX.brokenFlakeCount = int(''.join(playerXLines[0]).strip())
+        playerX.hasCollected = ''.join(playerXLines[1].strip())
+        playerX.rotateDirection = ''.join(playerXLines[2].strip())
+        playerX.collactedFlakeCount = int(''.join(playerXLines[3].strip()))
+        playerXFile.close()
+
+        return playerX
+
+    if(name == 'Y'):
+        playerYFile = open("playerY.dat", "r")
+        playerYLines = playerYFile.readlines()
+        playerY = Player('Y')
+        playerY.brokenFlakeCount = int(''.join(playerYLines[0].strip()))
+        playerY.hasCollected = ''.join(playerYLines[1].strip())
+        playerY.rotateDirection = ''.join(playerYLines[2].strip())
+        playerY.collactedFlakeCount = int(''.join(playerYLines[3].strip()))
+        playerYFile.close()
+
+        return playerY
+
+
+def loadTable():
+    listOfKeys = ['A1','B1','C1','D1','E1','F1','G1','H1','I1','J1','K1','L1','E3','H3','A5','B5','C5','D5','E5','F5','G5','H5','I5','J5','K5','L5']
+
+    tableDataFile = open("tableData.dat","r")
+    tableDataLines = tableDataFile.readlines()
+    tableDataFile.close()
+
+    striptedList = []
+    res = {}
+
+    for i in tableDataLines:
+        striptedList.append(i.strip())
+
+    for key in listOfKeys:
+        for value in striptedList:
+            res[key] = value
+            striptedList.remove(value)
+            break
+
+    if 'L5' not in res.keys():
+        res['L5'] = ""
+
+    return res
+
+
+def loadGame():
+    diceTableFile = open("dice.dat","r")
+    diceTableLines = diceTableFile.readlines()
+    if(diceTableLines == []):
+        print("Kaydedilmiş oyun yok, programdan çıkılıyor.")
+        return -1
+
+    lastLine = diceTableLines[len(diceTableLines)-1]
+
+    lastPlayerName = lastLine[0:1]
+    lastDice1 = lastLine[2:3]
+    lastDice2 = lastLine[4:]
+
+    print("Kaydedilen son oyun yükleniyor..")
+
+    #Dosyayı oku ve X oyuncusunun ayarlarını yükle.
+    playerX = loadPlayers('X')
+
+    #Dosyayı oku ve Y oyuncusunun ayarlarını yükle
+    playerY = loadPlayers('Y')
+
+    #Dosyayı oku ve tablodaki değerleri ata.
+    table = loadTable()
+
+    time.sleep(1)
+    print("Oyun başarıyla yüklendi.")
+    print("Masanın son hali:")
+    writeTable(table,lastDice1,lastDice2)
+
+    if(lastPlayerName == 'X'):
+        print("Oyuna Y oyuncusu devam ediyor.")
+        playerYTurn(playerY, playerX, table)
+        while (playerX.collactedFlakeCount != 0 or playerY.collactedFlakeCount != 0):
+            playerXTurn(playerX, playerY, table)
+            playerYTurn(playerY, playerX, table)
+            if (playerX.collactedFlakeCount == 0):
+                print("Oyunu X kazandı")
+                return ""
+            if (playerY.collactedFlakeCount == 0):
+                print("Oyunu Y kazandı")
+                return ""
+
+    if(lastPlayerName == 'Y'):
+        print("Oyuna X oyuncusu devam ediyor.")
+        playerXTurn(playerX,playerY,table)
+        while (playerX.collactedFlakeCount != 0 or playerY.collactedFlakeCount != 0):
+            playerYTurn(playerY,playerX,table)
+            playerXTurn(playerX,playerY,table)
+            if(playerX.collactedFlakeCount == 0):
+                print("Oyunu X kazandı")
+                return ""
+            if(playerY.collactedFlakeCount == 0):
+                print("Oyunu Y kazandı")
+                return ""
+
+
+if __name__ == "__main__":
+    print('Hoşgeldiniz\n')
+    print('Yeni oyuna başlamak için 1, kaydedilmiş oyunu yüklemek için 2 tuşuna basın:')
+    secim = input()
+
+    if(secim == '1'):
+        startNewGame()
+
+    if(secim == '2'):
+        loadGame()
